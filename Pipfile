@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+numpy = "==1.23.5"
+jaxlib = "==0.4.4"
+jax = "==0.4.4"
+tensorflow = "==2.11.0"
+tensorflowjs = "==4.2.0"
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"
