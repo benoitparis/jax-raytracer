@@ -9,11 +9,16 @@
     <canvas id="jax-raytracer"></canvas>
     <script type="text/javascript">
       async function getOutput() {
+        // tf.setBackend('cpu'); // OK
+        // tf.setBackend('webgl'); // KO
+        // tf.env().set('WEBGL_USE_SHAPES_UNIFORMS', true);
         const model = await tf.loadGraphModel('/model.json');
+        console.log(tf.getBackend());
+        console.log(tf.env());
         console.log(model);
-        const x = tf.tensor([0, 1], [2]);
+        const x = tf.tensor([0, (Date.now() / 10000) % 1], [2]);
         console.log(x);
-        // console.log(x.dataSync());
+        console.log(x.dataSync());
         let result = model.predict(x);
         console.log(result.shape);
         console.log(result);
@@ -42,8 +47,10 @@
 
 
         await tf.browser.toPixels(result, canvas);
+        // requestAnimationFrame(getOutput)
+
       }
-      window.modelOutput = getOutput();
+      getOutput();
     </script>
   </body>
 </html>
