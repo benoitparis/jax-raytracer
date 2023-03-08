@@ -14,7 +14,7 @@ import tensorflow as tf
 import tensorflowjs as tfjs
 
 
-resolution = 512
+resolution = 92
 ray_params = {
     'mouse_coords': jnp.array([0.5, 0.5]),
     'time': jnp.array([0])
@@ -22,15 +22,14 @@ ray_params = {
 
 
 def cube_points(p, s):
-    p = jnp.absolute(p)-s
-    return jnp.linalg.norm(p) - 0.125
+    p_sec = jnp.absolute(p)-s
+    return jnp.linalg.norm(p_sec) - 0.125
 
 
 def get_dist(p):
     vec_1 = jnp.array([1.0, 1.0, 1.0])
     d = cube_points(p, vec_1)
     return d
-
 
 def normalize(v):
     return v / jnp.linalg.norm(v)
@@ -53,6 +52,7 @@ def get_color(x, y):
 def ray_march(ro, rd):
     ds = get_dist(ro + rd*3)
     return ds
+    # return jnp.linalg.norm(rd) # c'est rd qui fuck up?
 
 #     // this is the distance
 #     float dO=0.;
@@ -73,15 +73,16 @@ def ray_march(ro, rd):
 # return dO;
 
 def per_ray(u, v, xs):
-    print(xs)
+    # print(xs)
     center = jnp.array([0.0, 0.0, 0.0])
     ro = jnp.array([0.5, 0.5, 0.5])
 
-    rd = get_ray_dir(u, v, ro, center, xs[1])
+    # rd = get_ray_dir(u, v, ro, center, xs[1])
+    rd = get_ray_dir(u, v, ro, center, 1.0)
+
     d = ray_march(ro, rd)
 
     # return u*v
-
     return d/5
 
 #
@@ -104,10 +105,6 @@ def per_ray(u, v, xs):
 # fragColor = vec4(color, 1.0);
 
 
-ctxr = jnp.linspace(0.0, 1.0, num=resolution, endpoint=False)
-ctyr = jnp.linspace(0.0, 1.0, num=resolution, endpoint=False)
-ctouter = jnp.outer(ctxr, ctyr)
-
 def main(ray_params, xs):
     cxr = jnp.linspace(0.0, 1.0, num=resolution, endpoint=False)
     cyr = jnp.linspace(0.0, 1.0, num=resolution, endpoint=False)
@@ -122,13 +119,13 @@ def main(ray_params, xs):
     # v1get_color = jax.vmap(get_color, (0, 0), 0)
     # vget_color = jax.vmap(get_color, (0, 1), 1)
     # ça marche?
-    # vget_color = jax.vmap(jax.vmap(per_ray, (0, None, None), 0), (None, 0, None), 1)
+    vget_color = jax.vmap(jax.vmap(per_ray, (0, None, None), 0), (None, 0, None), 1)
     # vget_color = jax.vmap(jax.vmap(get_color, (0, None), 0), (None, 0), 1)
 
 
-    # couter = vget_color(cxr, cyr, xs)
-    # couter = vget_color(ctxr, ctyr)
-    couter = jnp.outer(ctxr, ctyr)
+    couter = vget_color(cxr, cyr, xs)
+    # couter = vget_color(cxr, cyr)
+    # couter = jnp.outer(cxr, cyr)
 
 
     out = jnp.dstack((couter, couter, couter))

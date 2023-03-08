@@ -1,4 +1,3 @@
-
 <html lang="en">
   <head>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.2.0"> </script>
@@ -7,21 +6,11 @@
     <canvas id="cv"></canvas>
     <script type="text/javascript">
       async function getOutput() {
-        const model = await tf.loadGraphModel('/bug_outside/model.json');
-        const x = tf.tensor([0, 1], [2]);
-        console.log(x);
-        console.log(x.dataSync());
-        let result = model.predict(x);
-        console.log(result);
+        const model = await tf.loadGraphModel('/main_ok/model.json');
+        let result = model.predict();
         console.log(result.dataSync());
-        console.log(tf.memory());
-
         const canvas = document.getElementById("cv");
-        canvas.width = result.shape.width
-        canvas.height = result.shape.height
-
         await tf.browser.toPixels(result, canvas);
-
       }
       getOutput();
     </script>

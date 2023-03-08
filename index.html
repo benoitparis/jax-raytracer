@@ -17,6 +17,7 @@
         console.log(tf.env());
         console.log(model);
         const x = tf.tensor([0, (Date.now() / 10000) % 1], [2]);
+        // const x = tf.tensor([0, 0.9], [2]);
         console.log(x);
         console.log(x.dataSync());
         let result = model.predict(x);

@@ -1,0 +1,28 @@
+
+<html lang="en">
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.2.0"> </script>
+  </head>
+  <body>
+    <canvas id="cv"></canvas>
+    <script type="text/javascript">
+      async function getOutput() {
+        // tf.setBackend('cpu'); // Makes it ok
+        const model = await tf.loadGraphModel('/bug_inside/model.json');
+        let result = model.predict();
+        console.log(result);
+        console.log(result.dataSync());
+        console.log(tf.memory());
+
+        const canvas = document.getElementById("cv");
+        canvas.width = result.shape.width
+        canvas.height = result.shape.height
+
+        await tf.browser.toPixels(result, canvas);
+
+      }
+      getOutput();
+    </script>
+  </body>
+</html>
+  
