@@ -23,7 +23,7 @@ ray_params = {
 
 def cube_points(p, s):
     p_sec = jnp.absolute(p)-s
-    return jnp.linalg.norm(p_sec) - 0.125
+    return jnp.linalg.norm(p_sec) - 0.25
 
 
 def get_dist(p):
@@ -50,41 +50,24 @@ def get_color(x, y):
 
 
 def ray_march(ro, rd):
-    # ds = 1/ (0.01 + get_dist(ro + rd*3))
-    ds = get_dist(ro + rd*3)
-    return ds
-    # return jnp.linalg.norm(rd) # c'est rd qui fuck up?
+    distance = 0.0
+    for i in range(10):
+        distance += get_dist(ro + rd * distance)
+    return 1/(0.01 + distance)
+    # return distance
 
-#     // this is the distance
-#     float dO=0.;
-#
-# for(int i=0; i<MAX_STEPS; i++) {
-#                                // let's go in that direction
-# vec3 p = ro + rd*dO;
-# // let's advance with no collision with the strategy that we're safe the biggest sphere that fits between us and the nearest object
-# // should get sorta-exponential convergence
-# float dS = GetDist(p);
-# dO += dS;
-# // are we too far? are we too close?
-#
-# // TODO can we do early stopping and/or bypass remainder with JAX?
-# if(dO>MAX_DIST || abs(dS)<SURF_DIST) break;
-# }
-#
-# return dO;
 
 def per_ray(u, v, xs):
     # print(xs)
-    center = jnp.array([0.5, 0.0, 0.0])
-    ro = jnp.array([0.5, 0.5, 0.5])
+    center = jnp.array([0.0, 0.0, 0.0])
+    ro = jnp.array([3.0, 0.0, 0.0])
+    sun = normalize(jnp.array([1.0, 2.0, 3.0]))
 
-    # rd = get_ray_dir(u, v, ro, center, xs[1])
     rd = get_ray_dir(u, v, ro, center, xs[0])
     # rd = get_ray_dir(u, v, ro, center, 1.0)
 
     d = ray_march(ro, rd)
 
-    # return u*v
     # on clip pour être dans la range; il faudra retirer
     return jnp.clip(d, 0.0, 1.0)
     # return d
