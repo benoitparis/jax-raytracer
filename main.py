@@ -47,7 +47,7 @@ def get_color(x, y):
 
 def ray_march(ro, rd):
     distance = 0.0
-    for i in range(20):
+    for i in range(1):
         distance += get_dist(ro + rd * distance)
     return distance
 
@@ -65,14 +65,13 @@ def ray_color(u, v, xs):
 
     camera = jnp.matmul(rot(xs/5), camera_init)
 
-    # rd = get_ray_dir(u, v, ro, center, xs)
     rd = get_ray_dir(u, v, camera, center, 1.0)
 
     d = ray_march(camera, rd)
     at_surface = camera + rd * d
     normal = normalize(jax.grad(get_dist)(at_surface))
 
-    # second pass
+    # second pass, starting from reflection
     # reflection = d - 2*jnp.dot(normal, d)*normal
     # d_2 = ray_march(at_surface, reflection)
     # at_surface_2 = at_surface + reflection * d_2
@@ -93,6 +92,7 @@ def main(ray_params, xs):
     ray_colors = jax.vmap(jax.vmap(ray_color, (0, None, None), 0), (None, 0, None), 1)
 
     return ray_colors(cxr, cyr, xs[0])
+    # return ray_colors(cxr, cyr, 0.0)
 
 main(ray_params, [0.9])
 

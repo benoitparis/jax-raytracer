@@ -7,6 +7,9 @@
   <body>
     <h4>JAX Raytracer</h4><hr/>
     <canvas id="jax-raytracer"></canvas>
+    <h4>Demo</h4><hr/>
+
+
     <script type="text/javascript">
       let model;
       let canvas;
@@ -25,23 +28,24 @@
 
       }
 
-      let start = Date.now()
+      const start = Date.now()
       async function getOutput() {
 
         let time = ((Date.now()-start) / 1000);
-        console.log(time);
+        // console.log(time);
         const x = tf.tensor([time], [1]);
         // const x = tf.tensor([1.0], [1]);
         // console.log(x);
         // console.log(x.dataSync());
         let result = model.predict(x);
-        // tf.dispose(x); // ça marche pas
         // console.log(result.shape);
         // console.log(result);
         // console.log(result.dataSync());
-        // console.log(tf.memory());
+        console.log(tf.memory());
 
         await tf.browser.toPixels(result, canvas);
+        // tf.dispose(x);
+        // tf.dispose(result);
         requestAnimationFrame(getOutput)
 
       }
@@ -49,6 +53,10 @@
 
 
     </script>
+
+    <h4>Pourquoi donc?</h4><hr/>
+
+
   </body>
 </html>
   
