@@ -1,13 +1,3 @@
-# General imports
-# import json
-# import numpy as np
-# import os
-# import glob
-# import string
-
-#from IPython.core.display import display, HTML, Javascript
-#import google.colab.html
-#import google.colab.output
 import jax
 import jax.numpy as jnp
 import tensorflow as tf
@@ -20,6 +10,13 @@ ray_params = {
     'time': jnp.array([0])
 }
 
+def rot(a):
+    s = jnp.sin(a)
+    c = jnp.cos(a)
+    return jnp.array(
+        [[c, -s,  0],
+         [s,  c,  0],
+         [0,  0,  1]])
 
 def cube_points(p, s):
     p_sec = jnp.absolute(p)-s
@@ -53,55 +50,42 @@ def ray_march(ro, rd):
     distance = 0.0
     for i in range(10):
         distance += get_dist(ro + rd * distance)
-    # return 1/(0.01 + distance)
     return distance
 
 
-def per_ray(u, v, xs):
+def ray_color(u, v, xs):
     center = jnp.array([0.0, 0.0, 0.0])
-    ro = jnp.array([3.0, 0.0, 0.0])
+    ro_0 = jnp.array([3.0, 0.0, 0.0])
     sun = normalize(jnp.array([1.0, 2.0, 3.0]))
 
-    rd = get_ray_dir(u, v, ro, center, xs[0])
-    # rd = get_ray_dir(u, v, ro, center, 1.0)
+    #     // where is the mouse?
+    #     vec2 m = iMouse.xy/iResolution.xy;
+
+    # ro.yz *= Rot(-m.y*PI+1.);
+    # ro.xz *= Rot(-m.x*TAU + iTime);
+
+    ro = jnp.matmul(rot(xs), ro_0)
+
+    # rd = get_ray_dir(u, v, ro, center, xs)
+    rd = get_ray_dir(u, v, ro, center, 1.0)
 
     d = ray_march(ro, rd)
     at_surface = ro + rd * d
     normal = normalize(jax.grad(get_dist)(at_surface))
 
-    reflection = d - 2*jnp.dot(normal, d)*normal
-
     # second pass
-    d_2 = ray_march(at_surface, reflection)
-    at_surface_2 = at_surface + reflection * d_2
-    normal_2 = normalize(jax.grad(get_dist)(at_surface_2))
+    # reflection = d - 2*jnp.dot(normal, d)*normal
+    # d_2 = ray_march(at_surface, reflection)
+    # at_surface_2 = at_surface + reflection * d_2
+    # normal_2 = normalize(jax.grad(get_dist)(at_surface_2))
 
-    # light = jnp.dot(normal, sun)
-    light = jnp.dot(normal_2, sun)
+    light = jnp.dot(normal, sun)
+    # light = jnp.dot(normal_2, sun)
 
     # on clip pour être dans la range; il faudra retirer
     return jnp.clip(light, 0.0, 1.0)
     # return jnp.clip(d, 0.0, 1.0)
     # return d
-
-#
-# // let's travel until we hit a surface
-# // how long to go?
-# float d = RayMarch(ro, rd);
-# // let's go at the surface
-# vec3 p = ro + rd * d;
-# // where is the surface's normal?
-# vec3 n = GetNormal(p);
-# // we reflect off the surface
-# vec3 r = reflect(rd, n);
-#
-# // let's define where the light comes from
-# vec3 sun = normalize(vec3(1,2,3));
-# // are you at a close angle to the light? rgb are the same here
-# vec3 color = vec3(dot(n, sun));
-#
-#
-# fragColor = vec4(color, 1.0);
 
 
 def main(ray_params, xs):
@@ -111,16 +95,13 @@ def main(ray_params, xs):
     cxr = jnp.linspace(-1.0, 1.0, num=resolution, endpoint=False)
     cyr = jnp.linspace(-1.0, 1.0, num=resolution, endpoint=False)
 
-    #     // where is the mouse?
-    #     vec2 m = iMouse.xy/iResolution.xy;
 
-    # ro.yz *= Rot(-m.y*PI+1.);
-    # ro.xz *= Rot(-m.x*TAU + iTime);
 
-    vget_color = jax.vmap(jax.vmap(per_ray, (0, None, None), 0), (None, 0, None), 1)
+    ray_colors = jax.vmap(jax.vmap(ray_color, (0, None, None), 0), (None, 0, None), 1)
 
-    couter = vget_color(cxr, cyr, xs)
+    couter = ray_colors(cxr, cyr, xs[0])
 
+# necessary?
     out = jnp.dstack((couter, couter, couter))
     print(out.shape)
     print(out)

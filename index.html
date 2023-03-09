@@ -22,13 +22,15 @@
         console.log(model);
       }
 
+      let start = Date.now()
       async function getOutput() {
 
-        // const x = tf.tensor([(Date.now() / 2000) % 2], [1]);
-        const x = tf.tensor([1.0], [1]);
+        const x = tf.tensor([((Date.now()-start) / 2000)], [1]);
+        // const x = tf.tensor([1.0], [1]);
         console.log(x);
         console.log(x.dataSync());
         let result = model.predict(x);
+        tf.dispose(x); // ça marche pas
         console.log(result.shape);
         console.log(result);
         console.log(result.dataSync());
