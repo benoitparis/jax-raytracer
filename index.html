@@ -8,15 +8,23 @@
     <h4>JAX Raytracer</h4><hr/>
     <canvas id="jax-raytracer"></canvas>
     <script type="text/javascript">
-      async function getOutput() {
-        // tf.setBackend('cpu'); // OK
+      let model;
+      async function setup() {
+        tf.setBackend('cpu'); // OK
         // tf.setBackend('webgl'); // KO
         // tf.env().set('WEBGL_USE_SHAPES_UNIFORMS', true);
-        const model = await tf.loadGraphModel('/model.json');
+        // tf.env().set('WEBGL_USE_SHAPES_UNIFORMS', false);
+        // tf.env().set('WEBGL_PACK', false);
+        // tf.env().set('WEBGL_CONV_IM2COL', false);
+        model = await tf.loadGraphModel('/model.json');
         console.log(tf.getBackend());
         console.log(tf.env());
         console.log(model);
-        const x = tf.tensor([0, (Date.now() / 10000) % 1], [2]);
+      }
+
+      async function getOutput() {
+
+        const x = tf.tensor([(Date.now() / 3000) % 1], [1]);
         // const x = tf.tensor([0, 0.9], [2]);
         console.log(x);
         console.log(x.dataSync());
@@ -48,10 +56,12 @@
 
 
         await tf.browser.toPixels(result, canvas);
-        // requestAnimationFrame(getOutput)
+        requestAnimationFrame(getOutput)
 
       }
-      getOutput();
+      setup().then(getOutput);
+
+
     </script>
   </body>
 </html>

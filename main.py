@@ -75,10 +75,11 @@ def ray_march(ro, rd):
 def per_ray(u, v, xs):
     # print(xs)
     center = jnp.array([0.0, 0.0, 0.0])
-    ro = jnp.array([0.5, 0.5, 0.5])
+    ro = jnp.array([1.5, 0.5, 0.5])
 
     # rd = get_ray_dir(u, v, ro, center, xs[1])
-    rd = get_ray_dir(u, v, ro, center, 1.0)
+    rd = get_ray_dir(u, v, ro, center, xs[0])
+    # rd = get_ray_dir(u, v, ro, center, 1.0)
 
     d = ray_march(ro, rd)
 
@@ -106,6 +107,9 @@ def per_ray(u, v, xs):
 
 
 def main(ray_params, xs):
+    print('#######')
+    print(xs)
+    print('#######')
     cxr = jnp.linspace(0.0, 1.0, num=resolution, endpoint=False)
     cyr = jnp.linspace(0.0, 1.0, num=resolution, endpoint=False)
 
@@ -135,11 +139,11 @@ def main(ray_params, xs):
 
     return out
 
-main(ray_params, [0, 1])
+main(ray_params, [0.9])
 
 tfjs.converters.convert_jax(
     main,
     ray_params,
-    input_signatures=[tf.TensorSpec((2), tf.float32)],
+    input_signatures=[tf.TensorSpec((1), tf.float32)],
     model_dir='./'
 )
