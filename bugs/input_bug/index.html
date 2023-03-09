@@ -1,0 +1,27 @@
+
+<html lang="en">
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.2.0"> </script>
+  </head>
+  <body>
+    <script type="text/javascript">
+      let model;
+      async function setup() {
+        // tf.setBackend('cpu'); // OK
+        // tf.setBackend('webgl'); // Default, KO
+        model = await tf.loadGraphModel('/bugs/input_bug/model.json');
+        console.log(tf.getBackend());
+        console.log(tf.env());
+        console.log(model);
+      }
+      async function getOutput() {
+        const x = tf.tensor2d([0.125], [1, 1]);
+        let result = model.predict(x);
+        synced_result = result.dataSync();
+        console.log(synced_result[0]);
+      }
+      setup().then(getOutput);
+    </script>
+  </body>
+</html>
+  
