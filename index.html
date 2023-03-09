@@ -9,6 +9,7 @@
     <canvas id="jax-raytracer"></canvas>
     <script type="text/javascript">
       let model;
+      let canvas;
       async function setup() {
         tf.setBackend('cpu'); // OK
         // tf.setBackend('webgl'); // KO
@@ -20,42 +21,25 @@
         console.log(tf.getBackend());
         console.log(tf.env());
         console.log(model);
+        canvas = document.getElementById("jax-raytracer");
+
       }
 
       let start = Date.now()
       async function getOutput() {
 
-        const x = tf.tensor([((Date.now()-start) / 2000)], [1]);
+        let time = ((Date.now()-start) / 1000);
+        console.log(time);
+        const x = tf.tensor([time], [1]);
         // const x = tf.tensor([1.0], [1]);
-        console.log(x);
-        console.log(x.dataSync());
+        // console.log(x);
+        // console.log(x.dataSync());
         let result = model.predict(x);
-        tf.dispose(x); // ça marche pas
-        console.log(result.shape);
-        console.log(result);
-        console.log(result.dataSync());
-        console.log(tf.memory());
-
-
-        const canvas = document.getElementById("jax-raytracer");
-        canvas.width = result.shape.width
-        canvas.height = result.shape.height
-        console.log(canvas.width);
-
-        // const tensorA = tf.randomUniform([400, 400, 3]);
-        // console.log(tensorA.shape);
-        // const canvasA = document.getElementById("jax-raytracer");
-        // canvasA.width = 400;
-        // canvasA.height = 400;
-        // await tf.browser.toPixels(tensorA, canvasA).then(() => {
-        //   tensorA.dispose();
-        //   console.log(
-        //           "Make sure we cleaned up",
-        //           tf.memory().numTensors
-        //   );
-        // });
-
-
+        // tf.dispose(x); // ça marche pas
+        // console.log(result.shape);
+        // console.log(result);
+        // console.log(result.dataSync());
+        // console.log(tf.memory());
 
         await tf.browser.toPixels(result, canvas);
         requestAnimationFrame(getOutput)
