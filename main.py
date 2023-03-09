@@ -50,6 +50,7 @@ def get_color(x, y):
 
 
 def ray_march(ro, rd):
+    # ds = 1/ (0.01 + get_dist(ro + rd*3))
     ds = get_dist(ro + rd*3)
     return ds
     # return jnp.linalg.norm(rd) # c'est rd qui fuck up?
@@ -74,8 +75,8 @@ def ray_march(ro, rd):
 
 def per_ray(u, v, xs):
     # print(xs)
-    center = jnp.array([0.0, 0.0, 0.0])
-    ro = jnp.array([1.5, 0.5, 0.5])
+    center = jnp.array([0.5, 0.0, 0.0])
+    ro = jnp.array([0.5, 0.5, 0.5])
 
     # rd = get_ray_dir(u, v, ro, center, xs[1])
     rd = get_ray_dir(u, v, ro, center, xs[0])
@@ -84,7 +85,9 @@ def per_ray(u, v, xs):
     d = ray_march(ro, rd)
 
     # return u*v
-    return d/5
+    # on clip pour être dans la range; il faudra retirer
+    return jnp.clip(d, 0.0, 1.0)
+    # return d
 
 #
 # // let's travel until we hit a surface
@@ -110,30 +113,20 @@ def main(ray_params, xs):
     print('#######')
     print(xs)
     print('#######')
-    cxr = jnp.linspace(0.0, 1.0, num=resolution, endpoint=False)
-    cyr = jnp.linspace(0.0, 1.0, num=resolution, endpoint=False)
+    cxr = jnp.linspace(-1.0, 1.0, num=resolution, endpoint=False)
+    cyr = jnp.linspace(-1.0, 1.0, num=resolution, endpoint=False)
 
     #     // where is the mouse?
     #     vec2 m = iMouse.xy/iResolution.xy;
 
-
     # ro.yz *= Rot(-m.y*PI+1.);
     # ro.xz *= Rot(-m.x*TAU + iTime);
 
-    # v1get_color = jax.vmap(get_color, (0, 0), 0)
-    # vget_color = jax.vmap(get_color, (0, 1), 1)
-    # ça marche?
     vget_color = jax.vmap(jax.vmap(per_ray, (0, None, None), 0), (None, 0, None), 1)
-    # vget_color = jax.vmap(jax.vmap(get_color, (0, None), 0), (None, 0), 1)
-
 
     couter = vget_color(cxr, cyr, xs)
-    # couter = vget_color(cxr, cyr)
-    # couter = jnp.outer(cxr, cyr)
-
 
     out = jnp.dstack((couter, couter, couter))
-    # out = jnp.dstack((ctouter, ctouter, ctouter))
     print(out.shape)
     print(out)
 
