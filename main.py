@@ -53,12 +53,11 @@ def ray_march(ro, rd):
     distance = 0.0
     for i in range(10):
         distance += get_dist(ro + rd * distance)
-    return 1/(0.01 + distance)
-    # return distance
+    # return 1/(0.01 + distance)
+    return distance
 
 
 def per_ray(u, v, xs):
-    # print(xs)
     center = jnp.array([0.0, 0.0, 0.0])
     ro = jnp.array([3.0, 0.0, 0.0])
     sun = normalize(jnp.array([1.0, 2.0, 3.0]))
@@ -67,9 +66,22 @@ def per_ray(u, v, xs):
     # rd = get_ray_dir(u, v, ro, center, 1.0)
 
     d = ray_march(ro, rd)
+    at_surface = ro + rd * d
+    normal = normalize(jax.grad(get_dist)(at_surface))
+
+    reflection = d - 2*jnp.dot(normal, d)*normal
+
+    # second pass
+    d_2 = ray_march(at_surface, reflection)
+    at_surface_2 = at_surface + reflection * d_2
+    normal_2 = normalize(jax.grad(get_dist)(at_surface_2))
+
+    # light = jnp.dot(normal, sun)
+    light = jnp.dot(normal_2, sun)
 
     # on clip pour être dans la range; il faudra retirer
-    return jnp.clip(d, 0.0, 1.0)
+    return jnp.clip(light, 0.0, 1.0)
+    # return jnp.clip(d, 0.0, 1.0)
     # return d
 
 #
