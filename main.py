@@ -4,7 +4,7 @@ import tensorflow as tf
 import tensorflowjs as tfjs
 
 
-resolution = 92
+resolution = 90
 ray_params = {}
 
 
@@ -44,24 +44,97 @@ def get_ray_dir(u, v, p, l, z):
 def get_color(x, y):
     return x*y
 
-
 def ray_march(ro, rd):
     distance = 0.0
-    for i in range(1):
+    for i in range(20):
         distance += get_dist(ro + rd * distance)
     return distance
+
+
+# epsilon = 0.001
+def ray_marchOpt(ro, rd):
+    # vrai version, on tente d'optimiser?
+    # distance = 0.0
+    # for i in range(20):
+    #     distance += get_dist(ro + rd * distance)
+    # return distance
+
+
+    # max_steps = 10
+    #
+    # distance = 0.0
+    # add_distance = 1.0
+    # i = 0
+    # while jnp.where(jnp.logical_and(jnp.where(i < 30), jnp.where(add_distance > epsilon))):
+    #     i += 1
+    #     add_distance = get_dist(ro + rd * distance)
+    #     distance += add_distance
+    #
+    # return distance
+
+
+    # def f(carry, row):
+    #
+    #     even = 0
+    #     for n in row:
+    #         even += jax.lax.cond(n % 2 == 0, lambda: 1, lambda: 0)
+    #
+    #     return carry + even, even
+    #
+    # numbers = jnp.array([[3.0, 14.0], [15.0, -7.0], [16.0, -11.0]])
+    # jax.lax.scan(f, 0, numbers)
+
+    # def dist_acc(start_dist, item):
+    #     acc_distance = get_dist(ro + rd * start_dist)
+    #     return start_dist + acc_distance, acc_distance
+    #
+    # result_dist, _ = jax.lax.scan(dist_acc, 0.0, jnp.linspace(0.0, 0.0, num=20))
+    # return result_dist
+
+    # ça marche, mais pas d'augmentation de perf ça calcule ptet les deux
+    epsilon = -0.001
+    distance = 0.0
+    early_stop = False
+    for i in range(40):
+        # idem Unsupported Ops in the model before optimization _SwitchN
+        # distance_acc = jax.lax.switch(
+        #     jnp.array(early_stop, int),
+        #     [lambda: 0.0, lambda: get_dist(ro + rd * distance)]
+        # )
+        distance_acc = jnp.where(
+            early_stop,
+            0.0,
+            get_dist(ro + rd * distance)
+        )
+        # Unsupported Ops in the model before optimization _SwitchN
+        #   y'a switch mais pas SwitchN
+        #     https://github.com/onnx/tensorflow-onnx/issues/2094 ONNX en veut pas
+        #     mais jax.lax.switch fait du if?
+        #   early stopping c'est nul sur les shaders? vu que ça va executer les autres branchecs en simd?
+        # distance_acc = jax.lax.cond(
+        #     early_stop,
+        #     lambda: 0.0,
+        #     lambda: get_dist(ro + rd * distance)
+        # )
+        early_stop = early_stop | (abs(distance_acc) < epsilon)
+        # early_stop = jax.lax.cond(
+        #     abs(distance_acc) < epsilon,
+        #     lambda: True,
+        #     lambda: early_stop
+        # )
+        distance += distance_acc
+
+    return distance
+
+
+
+
 
 
 def ray_color(u, v, xs):
     center = jnp.array([0.0, 0.0, 0.0])
     camera_init = jnp.array([3.0, 0.0, 0.0])
     sun = normalize(jnp.array([1.0, 2.0, 3.0]))
-
-    #     // where is the mouse?
-    #     vec2 m = iMouse.xy/iResolution.xy;
-
-    # ro.yz *= Rot(-m.y*PI+1.);
-    # ro.xz *= Rot(-m.x*TAU + iTime);
 
     camera = jnp.matmul(rot(xs/5), camera_init)
 
@@ -91,14 +164,14 @@ def main(ray_params, xs):
 
     ray_colors = jax.vmap(jax.vmap(ray_color, (0, None, None), 0), (None, 0, None), 1)
 
-    return ray_colors(cxr, cyr, xs[0])
+    return ray_colors(cxr, cyr, xs[0, 0])
     # return ray_colors(cxr, cyr, 0.0)
 
-main(ray_params, [0.9])
+main(ray_params, jnp.array([[0.9]]))
 
 tfjs.converters.convert_jax(
     main,
     ray_params,
-    input_signatures=[tf.TensorSpec((1), tf.float32)],
+    input_signatures=[tf.TensorSpec((1, 1), tf.float32)],
     model_dir='./'
 )
