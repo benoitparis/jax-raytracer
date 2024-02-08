@@ -4,11 +4,11 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-numpy = "==1.23.5"
-jaxlib = "==0.4.4"
-jax = "==0.4.4"
-tensorflow = "==2.11.0"
-tensorflowjs = "==4.2.0"
+numpy = "==1.26.1"
+jaxlib = "==0.4.24"
+jax = "==0.4.24"
+tensorflow = "==2.15.0"
+tensorflowjs = "==4.17.0"
 
 [dev-packages]
 

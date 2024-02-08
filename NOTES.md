@@ -1,4 +1,12 @@
+--------------------------
+how to run:
+sur ubuntu 22 wsl
 
+    cd /mnt/c/ws/jax-raytracer
+    pipenv shell
+    python main.py
+    python3 -m http.server
+      (attention ctrl+f5 à chaque fois)
 -------------------------------------
 installation
 
@@ -27,19 +35,8 @@ DONE
 sudo apt install nvidia-cuda-toolkit
 ça fait rien ici
 
-
---------------------------
-
-how to run:
-
-
-    sur ubuntu 22 wsl
-
-    cd /mnt/c/ws/jax-raytracer
-    pipenv shell
-    python main.py
-    python3 -m http.server
-    
+# essai upgrade
+pipenv install jaxlib==0.4.24 jax==0.4.24 numpy==1.26.1 tensorflow==2.15.0 tensorflowjs==4.16.0
     
     
     
