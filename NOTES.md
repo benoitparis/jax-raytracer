@@ -25,7 +25,7 @@ pipenv install tensorflow
 pipenv uninstall numpy jaxlib jax tensorflowjs tensorflow
 
 # on réinstalle
-pipenv install numpy==1.23.5 jaxlib==0.4.4 jax==0.4.4 tensorflow==2.11.0 tensorflowjs==4.2.0
+pipenv install jaxlib==0.4.24 jax==0.4.24 numpy==1.26.1 tensorflow==2.15.0 tensorflowjs==4.17.0
 
 # ça fail
 #   leçon: faut tout installer ensemble, et ça va raler sur les compat
@@ -34,9 +34,6 @@ pipenv install numpy==1.23.5 jaxlib==0.4.4 jax==0.4.4 tensorflow==2.11.0 tensorf
 DONE
 sudo apt install nvidia-cuda-toolkit
 ça fait rien ici
-
-# essai upgrade
-pipenv install jaxlib==0.4.24 jax==0.4.24 numpy==1.26.1 tensorflow==2.15.0 tensorflowjs==4.16.0
     
     
     

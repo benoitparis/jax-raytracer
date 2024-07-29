@@ -128,9 +128,6 @@ def ray_marchOpt(ro, rd):
 
 
 
-
-
-
 def ray_color(u, v, xs):
     center = jnp.array([0.0, 0.0, 0.0])
     camera_init = jnp.array([3.0, 0.0, 0.0])
@@ -175,3 +172,11 @@ tfjs.converters.convert_jax(
     input_signatures=[tf.TensorSpec((1, 1), tf.float32)],
     model_dir='./'
 )
+
+# nah, faudrait le refaire en Keras
+# https://www.tensorflow.org/js/tutorials/conversion/import_keras
+# tfjs.converters.save_keras_model(
+#     main,
+#     './'
+# )
+
