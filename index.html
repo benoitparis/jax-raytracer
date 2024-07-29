@@ -16,13 +16,13 @@
       async function setup() {
           model = await tf.loadGraphModel('/model.json');
           canvas = document.getElementById("jax-raytracer");
-          document.getElementById("backend").innerHTML = ("backend: " + (tf.getBackend()));
+          document.getElementById("backend").innerHTML = ("Backend by tfjs: " + (tf.getBackend()));
       }
 
       const start = Date.now()
       async function predictLoop() {
 
-        let time = ((Date.now()-start) / 1000);
+        let time = (Date.now()-start) / 1000;
         const x = tf.tensor2d([time], [1, 1]);
         let result = model.predict(x);
 
@@ -72,7 +72,7 @@ Je me suis lancé dans cette démo principalement pour les détourner de leur bu
     mathematically beautiful, another step in having higher level languages that are still mechanically sympathetical
 
 
-
+notes: ajouter un numpy
 
   </body>
 </html>
