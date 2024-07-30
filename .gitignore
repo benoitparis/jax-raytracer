@@ -1,3 +1,7 @@
 /test.ipynb
 /.idea/
 /.ipynb_checkpoints/
+*.iml
+
+Pipfile.lock
+/bugs
