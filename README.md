@@ -1,7 +1,6 @@
 POC project to prove that JAX was meant for graphics rendering.
 
-JAX, Tensorflowjs on WebGL to create a RayMarching engine
-
+JAX, TensorFlow.js on WebGL to create a RayMarching engine
 
 ----
 

@@ -5,8 +5,6 @@ import tensorflowjs as tfjs
 
 
 resolution = 512
-# TODO specify reflection option here?
-ray_params = {}
 
 
 def rotate(a):
@@ -55,7 +53,7 @@ def ray_march(ro, rd):
 
 def ray_color(u, v, t):
     camera_init = jnp.array([3.0, 0.0, 0.0])
-    camera_position = jnp.matmul(rotate(t/5), camera_init)
+    camera_position = jnp.matmul(rotate(t[0]/20), camera_init)
     camera_direction = normalize(-camera_position)
 
     ray_direction = get_ray_direction(u, v, camera_direction)
@@ -79,20 +77,20 @@ def ray_color(u, v, t):
     # return jnp.clip(light, 0.0, 1.0)
 
 
-def main(ray_params, t):
+def main(params, t):
     cxr = jnp.linspace(-1.0, 1.0, num=resolution, endpoint=False)
     cyr = jnp.linspace(-1.0, 1.0, num=resolution, endpoint=False)
 
     ray_colors = jax.vmap(jax.vmap(ray_color, (0, None, None), 0), (None, 0, None), 1)
 
-    return ray_colors(cxr, cyr, t[0, 0])
+    return ray_colors(cxr, cyr, t)
 
 # Debug with this
 # main(ray_params, jnp.array([[0.9]]))
 
 tfjs.converters.convert_jax(
-    main,
-    ray_params,
-    input_signatures=[tf.TensorSpec((1, 1), tf.float32)],
+    apply_fn=main,
+    params={},
+    input_signatures=[tf.TensorSpec([3], tf.float32)],
     model_dir='./'
 )
