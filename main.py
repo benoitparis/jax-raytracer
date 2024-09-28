@@ -16,92 +16,61 @@ def rotate_z(a):
          [s,  c,  0],
          [0,  0,  1]])
 
-def rotate_y(a):
-    s = jnp.sin(a)
-    c = jnp.cos(a)
-    # A rotation matrix
-    return jnp.array(
-        [[c,  0, -s],
-         [0,  1,  0],
-         [s,  0,  c]])
 
-def rotate_x(a):
-    s = jnp.sin(a)
-    c = jnp.cos(a)
-    # A rotation matrix
-    return jnp.array(
-        [[1, 0,  0],
-         [0, c, -s],
-         [0, s,  c]])
-
-def cube_vertex_spheres(position):
-    # One cube corner
-    point = jnp.array([1.0, 1.0, 1.0])
-    # Reflected across each axis, we get 8 corners
-    points = jnp.absolute(position) - point
-    # Sphere surface is at 0.25 from a corner
-    return jnp.linalg.norm(points) - 0.25
-
-
-def distance_function(p):
-    return cube_vertex_spheres(p)
+def distance_function(position):
+    return jnp.linalg.norm(jnp.mod(position, 4.0) - 2.0) - 0.5
 
 
 def normalize(v):
     return v / jnp.linalg.norm(v)
 
 
+
+
 def get_ray_direction(u, v, camera_direction):
-    vertical = jnp.array([0.0, 1.0, 0.0])
+    vertical = jnp.array([0.0, 0.0, 1.0])
     r = normalize(jnp.cross(vertical, camera_direction))
-    # TODO investigate gimbal lock here, by removing normalize:
-    # r = jnp.cross(vertical, camera_direction)
     u_1 = jnp.cross(camera_direction, r)
-    i = camera_direction + u*r + v*u_1
+    i = camera_direction + u*u_1 + v*r
     return normalize(i)
 
 
-def ray_march(ray_origin, ray_direction):
-    distance = 0.0
-    for _ in range(20):
-        distance += distance_function(ray_origin + ray_direction * distance)
-    return distance
+def get_camera(txy):
+    position = jnp.array([3.5, 0.0, 0.0])
+    position = jnp.matmul(rotate_z(txy[0]/20 + txy[1]/resolution - 0.5), position)
+    position = position + jnp.array([0.0, 0.0, -5 * (txy[2]/resolution - 0.5)] )
+    direction = normalize(-position)
+    return position, direction
 
 
 def ray_color(u, v, txy):
-    camera_position = jnp.array([3.0, 0.0, 0.0])
-    camera_position = jnp.matmul(rotate_y(            txy[2]/resolution - 0.5), camera_position)
-    camera_position = jnp.matmul(rotate_z(txy[0]/20 + txy[1]/resolution - 0.5), camera_position)
-    camera_direction = normalize(-camera_position)
+    camera_position, camera_direction = get_camera(txy)
 
     ray_direction = get_ray_direction(u, v, camera_direction)
 
-    distance = ray_march(camera_position, ray_direction)
+    distance = 0.0
+    for _ in range(20):
+        distance += distance_function(camera_position + ray_direction * distance)
+
     point_at_surface = camera_position + ray_direction * distance
-    normal = jax.grad(distance_function)(point_at_surface)
+    normal_at_surface = jax.grad(distance_function)(point_at_surface)
 
-    sun = normalize(jnp.array([1.0, 2.0, 3.0]))
+    sun_direction = normalize(jnp.array([1.0, 2.0, 3.0]))
 
+    fog = jnp.clip(jnp.exp(- distance * distance *  0.005), 0.0, 1.0)
+
+    # TODO add specular? https://www.shadertoy.com/view/MsBGW1
     # Light diffusion
-    light = (jnp.dot(normal, sun) + 1) / 2
-    return light
-
-    # Light reflections
-    # reflection = distance - 2*jnp.dot(normal, distance)*normal
-    # d_2 = ray_march(point_at_surface, reflection)
-    # at_surface_2 = point_at_surface + reflection * d_2
-    # normal_2 = normalize(jax.grad(distance_function)(at_surface_2))
-    # light = (jnp.dot(normal_2, sun) + 1) / 2
-    # return jnp.clip(light, 0.0, 1.0)
+    return ((jnp.dot(normal_at_surface, sun_direction) + 1) / 2 ) * fog
 
 
 def main(params, txy):
-    cxr = jnp.linspace(-1.0, 1.0, num=resolution, endpoint=False)
-    cyr = jnp.linspace(-1.0, 1.0, num=resolution, endpoint=False)
+    u_range = jnp.linspace(-1.0, 1.0, num=resolution)
+    v_range = jnp.linspace(-1.0, 1.0, num=resolution)
 
     ray_colors = jax.vmap(jax.vmap(ray_color, (0, None, None), 0), (None, 0, None), 1)
 
-    return ray_colors(cxr, cyr, txy)
+    return ray_colors(u_range, v_range, txy)
 
 
 tfjs.converters.convert_jax(

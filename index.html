@@ -23,8 +23,8 @@
         }
 
         async function predictLoop() {
-            // let time = (Date.now() - start) / 1000;
-            let time = 0;
+            let time = (Date.now() - start) / 1000;
+            // let time = 0;
             const x = tf.tensor1d([time, mouseX, mouseY]);
             let result = model.predict(x);
 
