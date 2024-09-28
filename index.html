@@ -1,4 +1,4 @@
-<div>
+<div style="text-align: center;">
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0"></script>
     <canvas id="jax-raytracer"></canvas>
     <div id="backend"></div>
@@ -12,8 +12,6 @@
             let rect = canvas.getBoundingClientRect();
             mouseX = event.clientX - rect.left;
             mouseY = event.clientY - rect.top;
-            console.log(mouseX);
-            console.log(mouseY);
         }
 
         async function setup() {
@@ -25,7 +23,8 @@
         }
 
         async function predictLoop() {
-            let time = (Date.now() - start) / 1000;
+            // let time = (Date.now() - start) / 1000;
+            let time = 0;
             const x = tf.tensor1d([time, mouseX, mouseY]);
             let result = model.predict(x);
 

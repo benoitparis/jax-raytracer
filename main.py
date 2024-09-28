@@ -7,7 +7,7 @@ import tensorflowjs as tfjs
 resolution = 512
 
 
-def rotate(a):
+def rotate_z(a):
     s = jnp.sin(a)
     c = jnp.cos(a)
     # A rotation matrix
@@ -16,6 +16,23 @@ def rotate(a):
          [s,  c,  0],
          [0,  0,  1]])
 
+def rotate_y(a):
+    s = jnp.sin(a)
+    c = jnp.cos(a)
+    # A rotation matrix
+    return jnp.array(
+        [[c,  0, -s],
+         [0,  1,  0],
+         [s,  0,  c]])
+
+def rotate_x(a):
+    s = jnp.sin(a)
+    c = jnp.cos(a)
+    # A rotation matrix
+    return jnp.array(
+        [[1, 0,  0],
+         [0, c, -s],
+         [0, s,  c]])
 
 def cube_vertex_spheres(position):
     # One cube corner
@@ -44,16 +61,17 @@ def get_ray_direction(u, v, camera_direction):
     return normalize(i)
 
 
-def ray_march(ro, rd):
+def ray_march(ray_origin, ray_direction):
     distance = 0.0
     for _ in range(20):
-        distance += distance_function(ro + rd * distance)
+        distance += distance_function(ray_origin + ray_direction * distance)
     return distance
 
 
-def ray_color(u, v, t):
-    camera_init = jnp.array([3.0, 0.0, 0.0])
-    camera_position = jnp.matmul(rotate(t[0]/20), camera_init)
+def ray_color(u, v, txy):
+    camera_position = jnp.array([3.0, 0.0, 0.0])
+    camera_position = jnp.matmul(rotate_y(            txy[2]/resolution - 0.5), camera_position)
+    camera_position = jnp.matmul(rotate_z(txy[0]/20 + txy[1]/resolution - 0.5), camera_position)
     camera_direction = normalize(-camera_position)
 
     ray_direction = get_ray_direction(u, v, camera_direction)
@@ -77,16 +95,14 @@ def ray_color(u, v, t):
     # return jnp.clip(light, 0.0, 1.0)
 
 
-def main(params, t):
+def main(params, txy):
     cxr = jnp.linspace(-1.0, 1.0, num=resolution, endpoint=False)
     cyr = jnp.linspace(-1.0, 1.0, num=resolution, endpoint=False)
 
     ray_colors = jax.vmap(jax.vmap(ray_color, (0, None, None), 0), (None, 0, None), 1)
 
-    return ray_colors(cxr, cyr, t)
+    return ray_colors(cxr, cyr, txy)
 
-# Debug with this
-# main(ray_params, jnp.array([[0.9]]))
 
 tfjs.converters.convert_jax(
     apply_fn=main,
