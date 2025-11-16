@@ -27,6 +27,8 @@
             // let time = 0;
             const x = tf.tensor1d([time, mouseX, mouseY]);
             let result = model.predict(x);
+            // const result = await model.executeAsync(x);
+
 
             await tf.browser.toPixels(result, canvas);
             tf.dispose(x);

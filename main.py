@@ -1,5 +1,7 @@
 import jax
 import jax.numpy as jnp
+from jax import lax
+from jax import nn
 import tensorflow as tf
 import tensorflowjs as tfjs
 
@@ -16,15 +18,32 @@ def rotate_z(a):
          [s,  c,  0],
          [0,  0,  1]])
 
+def sphere(position, size):
+    return jnp.linalg.norm(position) - size
 
-def distance_function(position):
-    return jnp.linalg.norm(jnp.mod(position, 4.0) - 2.0) - 0.5
+
+def cube(position, size):
+    return jnp.max(jnp.abs(position) - size)
+
+
+def union(d1, d2, k=0.1):
+    # smooth minimum, as min is not differentiable; with a root
+    # k the typical distance over which to smooth
+    k *= 2.0
+    x = d2 - d1
+    return 0.5 * (d1 + d2 - jnp.sqrt(x * x + k * k))
+
+
+def distance_function(position, time):
+#     return jnp.linalg.norm(jnp.mod(position, 4.0) - 2.0) - 0.5
+#     return sphere(position + 2.0, 1.0) - 1.0
+#     return cube(position + 2.0, 1.0) - 1.0
+    return union(cube(position, 0.0) - 1.0, sphere(position + 2.0 *jnp.sin(time), 1.0)) # marche pas..
+#     return jnp.max(position + 2.0) - 1.0
 
 
 def normalize(v):
     return v / jnp.linalg.norm(v)
-
-
 
 
 def get_ray_direction(u, v, camera_direction):
@@ -36,26 +55,27 @@ def get_ray_direction(u, v, camera_direction):
 
 
 def get_camera(txy):
-    position = jnp.array([3.5, 0.0, 0.0])
-    position = jnp.matmul(rotate_z(txy[0]/20 + txy[1]/resolution - 0.5), position)
-    position = position + jnp.array([0.0, 0.0, -5 * (txy[2]/resolution - 0.5)] )
+    position = jnp.array([6.0, 0.0, 0.0]) # TODO change init or angle to minimize
+    position = jnp.matmul(rotate_z(5 * (txy[1]/resolution - 0.5)), position) # TODO make it follow more
+    position = position + jnp.array([0.0, 0.0, -10 * (txy[2]/resolution - 0.5)] )
     direction = normalize(-position)
     return position, direction
 
 
+sun_direction = normalize(jnp.array([1.0, 2.0, 3.0]))
+
+
 def ray_color(u, v, txy):
     camera_position, camera_direction = get_camera(txy)
-
     ray_direction = get_ray_direction(u, v, camera_direction)
-
     distance = 0.0
+
     for _ in range(20):
-        distance += distance_function(camera_position + ray_direction * distance)
+        distance += distance_function(camera_position + ray_direction * distance, txy[0])
 
     point_at_surface = camera_position + ray_direction * distance
-    normal_at_surface = jax.grad(distance_function)(point_at_surface)
+    normal_at_surface = jax.grad(distance_function)(point_at_surface, txy[0])
 
-    sun_direction = normalize(jnp.array([1.0, 2.0, 3.0]))
 
     fog = jnp.clip(jnp.exp(- distance * distance *  0.005), 0.0, 1.0)
 
