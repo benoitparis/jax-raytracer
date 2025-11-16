@@ -46,6 +46,10 @@ def normalize(v):
     return v / jnp.linalg.norm(v)
 
 
+def reflect(incident, normal):
+    return incident - 2 * jnp.dot(normal, incident) * normal
+
+
 def get_ray_direction(u, v, camera_direction):
     vertical = jnp.array([0.0, 0.0, 1.0])
     r = normalize(jnp.cross(vertical, camera_direction))
@@ -65,6 +69,7 @@ def get_camera(txy):
 sun_direction = normalize(jnp.array([1.0, 2.0, 3.0]))
 
 
+
 def ray_color(u, v, txy):
     camera_position, camera_direction = get_camera(txy)
     ray_direction = get_ray_direction(u, v, camera_direction)
@@ -75,13 +80,17 @@ def ray_color(u, v, txy):
 
     point_at_surface = camera_position + ray_direction * distance
     normal_at_surface = jax.grad(distance_function)(point_at_surface, txy[0])
-
+    normal_at_surface = normalize(normal_at_surface)
 
     fog = jnp.clip(jnp.exp(- distance * distance *  0.005), 0.0, 1.0)
 
-    # TODO add specular? https://www.shadertoy.com/view/MsBGW1
-    # Light diffusion
-    return ((jnp.dot(normal_at_surface, sun_direction) + 1) / 2 ) * fog
+    # Calculate specular reflection
+    reflected = reflect(-sun_direction, normal_at_surface)
+    specular = jnp.maximum(0.0, jnp.dot(ray_direction, reflected)) ** 20.0
+
+    # Combine diffuse and specular lighting with fog
+    diffuse = (jnp.dot(normal_at_surface, sun_direction) + 1) / 2
+    return (0.5 * diffuse + 0.5 * specular) * fog
 
 
 def main(params, txy):
