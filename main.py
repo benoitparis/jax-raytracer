@@ -65,9 +65,6 @@ def reflect(incident, normal):
     return incident - 2 * jnp.dot(normal, incident) * normal
 
 
-sun_direction = normalize(jnp.array([1.0, 2.0, 3.0]))
-
-
 def ray_color(u, v, txy):
     time = txy[0]
     x = txy[1]
@@ -90,10 +87,11 @@ def ray_color(u, v, txy):
     # Fog
     fog = jnp.clip(jnp.exp(- distance * distance *  0.005), 0.0, 1.0)
     # Specular
-    reflected = reflect(-sun_direction, normal_at_surface)
+    light_source_direction = normalize(jnp.array([1.0, 2.0, 3.0]))
+    reflected = reflect(-light_source_direction, normal_at_surface)
     specular = jnp.maximum(0.0, jnp.dot(ray_direction, reflected)) ** 20.0
     # Diffusion
-    diffuse = (jnp.dot(normal_at_surface, sun_direction) + 1) / 2
+    diffuse = (jnp.dot(normal_at_surface, light_source_direction) + 1) / 2
 
     return (0.5 * diffuse + 0.5 * specular) * fog
 
@@ -102,7 +100,7 @@ def main(params, txy):
     u_range = jnp.linspace(-1.0, 1.0, num=resolution)
     v_range = jnp.linspace(-1.0, 1.0, num=resolution)
 
-    ray_colors = jax.vmap(jax.vmap(ray_color, (0, None, None), 0), (None, 0, None), 1)
+    ray_colors = jax.vmap(jax.vmap(ray_color, (None, 0, None)), (0, None, None))
 
     return ray_colors(u_range, v_range, txy)
 
